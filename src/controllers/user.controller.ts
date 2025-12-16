@@ -72,4 +72,60 @@ const login = async (req: Request, res: Response) => {
   }
 };
 
-export { signup, login };
+// Edit user controller
+const editUser = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.id;
+    const { name, email, new_password, retype_password } = req.body;
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    // sign the update object
+    const new_user: any = {};
+
+    // assign new values to the update object
+    if (name) new_user.name = name;
+
+    // check if email is already in use by another user
+    if (email) {
+      const email_exists = await user_model.findOne({ email });
+      if (email_exists && email_exists._id.toString() !== userId) {
+        return res.status(409).json({ message: "Email already in use" });
+      }
+      new_user.email = email;
+    }
+
+    // if password is to be updated, check if it matches retype_password
+    if (new_password) {
+      if (new_password !== retype_password) {
+        return res.status(400).json({ message: "Passwords do not match" });
+      }
+      new_user.password = await bcrypt.hash(new_password, 10);
+    }
+
+    // check if at least one field is provided
+    if (Object.keys(new_user).length === 0) {
+      return res.status(400).json({ message: "No fields to update" });
+    }
+
+    // update the user
+    const updatedUser = await user_model.findByIdAndUpdate(userId, new_user, {
+      new: true,
+    });
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res
+      .status(200)
+      .json({ message: "User updated successfully", user: updatedUser });
+  } catch (err: any) {
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: err.message });
+  }
+};
+
+export { signup, login, editUser };
