@@ -175,4 +175,22 @@ const deleteUser = async (req: Request, res: Response) => {
   }
 };
 
-export { signup, login, editUser, deleteUser };
+// Logout controller
+const logout = async (req: Request, res: Response) => {
+  try {
+    // Clear the JWT token cookie (client-side invalidation)
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: config.node_env === "production",
+      sameSite: "strict",
+    });
+    // Success response
+    return res.status(200).json({ message: "Logged out successfully" });
+  } catch (err: any) {
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: err.message });
+  }
+};
+
+export { signup, login, editUser, deleteUser, logout };
