@@ -13,7 +13,10 @@ const course_schema = new mongoose.Schema(
       minLength: 50,
       maxLength: 300,
     },
-    thumbnail: { type: Buffer, required: false },
+    thumbnail: {
+      type: Buffer,
+      required: false,
+    },
     category: {
       type: String,
       required: true,
@@ -32,7 +35,12 @@ const course_schema = new mongoose.Schema(
       ],
       default: "other",
     },
-    reviews: { type: Number, required: false, default: 0, min: 0 },
+    reviews: {
+      type: Number,
+      required: false,
+      default: 0,
+      min: 0,
+    },
     author: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -51,7 +59,57 @@ const course_schema = new mongoose.Schema(
       default: "paypal",
       required: true,
     },
-    coupon_code: { type: String, maxLength: 15, minLength: 3 },
+    coupon_code: {
+      type: String,
+      maxLength: 15,
+      minLength: 3,
+    },
+    isPublished: {
+      type: Boolean,
+      default: false,
+    },
+    level: {
+      type: String,
+      required: true,
+      enum: ["Beginner", "Intermediate", "Advanced"],
+    },
+    duration: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    language: {
+      type: [String],
+      required: true,
+      enum: ["en", "fr", "gr", "es", "it", "id", "jp", "ch", "rs"],
+      default: ["en"],
+      validate: {
+        validator: function (v: String[]) {
+          return v && v.length >= 1;
+        },
+        message: "At least one language is required",
+      },
+    },
+    requirements: {
+      type: [String],
+      required: true,
+      validate: {
+        validator: function (v: String[]) {
+          return v && v.length >= 1;
+        },
+        message: "At least one requirement is required",
+      },
+    },
+    sections: {
+      type: [String],
+      required: true,
+      validate: {
+        validator: function (v: String[]) {
+          return v && v.length >= 2;
+        },
+        message: "At least two section is required",
+      },
+    },
   },
   { timestamps: true }
 );
