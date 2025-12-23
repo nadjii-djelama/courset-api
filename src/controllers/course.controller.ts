@@ -101,6 +101,29 @@ const getSpecificCourse = async (req: Request, res: Response) => {
   }
 };
 
+// Delete specific course controller ----------------------------------------------------->
+const deleteSpecificCourse = async (req: Request, res: Response) => {
+  try {
+    const courseId = req.params.id;
+
+    // Delete course and return deleted document
+    const deletedCourse = await course_model.findByIdAndDelete(courseId);
+
+    // Return 404 if course not found
+    if (!deletedCourse) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    // Return success confirmation
+    return res.status(200).json({ message: "Course deleted successfully" });
+  } catch (err: any) {
+    return res.status(500).json({
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
 export {
   createCourse,
   editCourse,
