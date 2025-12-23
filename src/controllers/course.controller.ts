@@ -75,6 +75,32 @@ const getCourses = async (req: Request, res: Response) => {
   }
 };
 
+// Get specific course controller ----------------------------------------------------->
+const getSpecificCourse = async (req: Request, res: Response) => {
+  try {
+    const courseId = req.params.id;
+
+    // Fetch single course by ID
+    const course = await course_model.findById(courseId);
+
+    // Return 404 if course not found
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    // Return specific course
+    return res.status(200).json({
+      message: "Course fetched successfully",
+      course,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
 export {
   createCourse,
   editCourse,
