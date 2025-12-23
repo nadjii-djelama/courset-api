@@ -7,6 +7,9 @@ await dbConnection();
 // Middlewares
 app.use(express.json());
 
+import userRoutes from "./routes/user.route";
+app.use("/api/v1/", userRoutes);
+
 // Routes
 
 app.listen(config.port, () => {

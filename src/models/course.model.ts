@@ -34,6 +34,7 @@ const course_schema = new mongoose.Schema(
         "other",
       ],
       default: "other",
+      lowercase: true,
     },
     reviews: {
       type: Number,
@@ -46,6 +47,7 @@ const course_schema = new mongoose.Schema(
       ref: "User",
       required: true,
       index: true,
+      lowercase: true,
     },
     price: {
       type: Number,
@@ -89,6 +91,7 @@ const course_schema = new mongoose.Schema(
         },
         message: "At least one language is required",
       },
+      lowercase: true,
     },
     requirements: {
       type: [String],
