@@ -50,6 +50,30 @@ const editCourse = async (req: Request, res: Response) => {
     });
   }
 };
+// Get all courses controller ----------------------------------------------------->
+const getCourses = async (req: Request, res: Response) => {
+  try {
+    // Fetch all courses from database
+    const courses = await course_model.find();
+
+    // Handle empty collection gracefully
+    if (courses.length <= 0) {
+      return res.status(200).json({ message: "No courses found" });
+    }
+
+    // Return courses with count
+    return res.status(200).json({
+      message: "Courses fetched successfully",
+      courses,
+      count: courses.length,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
 
 export {
   createCourse,
