@@ -124,6 +124,25 @@ const deleteSpecificCourse = async (req: Request, res: Response) => {
   }
 };
 
+// Delete all courses controller ----------------------------------------------------->
+const deleteAllCourses = async (req: Request, res: Response) => {
+  try {
+    // Delete all courses from collection
+    const result = await course_model.deleteMany({});
+
+    // Return delete confirmation with count
+    return res.status(200).json({
+      message: "All courses deleted successfully",
+      deletedCount: result.deletedCount,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
 export {
   createCourse,
   editCourse,
