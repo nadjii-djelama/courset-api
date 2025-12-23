@@ -143,6 +143,82 @@ const deleteAllCourses = async (req: Request, res: Response) => {
   }
 };
 
+// Filter courses controller ----------------------------------------------------->
+const filterCourses = async (req: Request, res: Response) => {
+  try {
+    const {
+      price,
+      category,
+      level,
+      author,
+      page = 1,
+      limit = 10,
+      sort = "-createdAt",
+    } = req.query;
+
+    // Calculate pagination offset
+    const skip = (Number(page) - 1) * Number(limit);
+    const query: any = {};
+
+    // Helper function for multi-value filters ($in operator)
+    const addFilter = (field: string, values: string | string[]) => {
+      const vals = Array.isArray(values) ? values : [values];
+      if (vals.length === 1) {
+        query[field] = vals[0]; // Exact match
+      } else {
+        query[field] = { $in: vals }; // OR logic for multiple values
+      }
+    };
+
+    // Handle price filtering (exact or range)
+    if (price) {
+      const prices: any = Array.isArray(price) ? price : [price];
+      if (prices.length === 1) {
+        query.price = prices[0]; // Exact price match
+      } else {
+        // Price range: min <= price <= max
+        query.price = {
+          $gte: Number(Math.min(...prices)),
+          $lte: Number(Math.max(...prices)),
+        };
+      }
+    }
+
+    // Add other filters
+    if (category) addFilter("category", category as string);
+    if (level) addFilter("level", level as string);
+    if (author) addFilter("author", author as string);
+
+    // Get total count of filtered results
+    const total = await course_model.countDocuments(query);
+
+    // Fetch paginated, sorted, filtered courses
+    const courses = await course_model
+      .find(query)
+      .sort(sort as string)
+      .skip(skip)
+      .limit(Number(limit));
+
+    // Return filtered results with pagination info
+    return res.status(200).json({
+      message: "Courses filtered successfully",
+      courses,
+      count: courses.length,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        pages: Math.ceil(total / Number(limit)),
+      },
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
 export {
   createCourse,
   editCourse,
