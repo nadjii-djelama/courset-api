@@ -1,5 +1,6 @@
 import { body, validationResult } from "express-validator";
 import { Response, Request, NextFunction } from "express";
+import { title } from "process";
 
 // Validation rules
 const courseValidationRules = [
@@ -47,7 +48,7 @@ const courseValidationRules = [
 ];
 
 // Middleware to check validation results
-const validateRequest = (req: Request, res: Response, next: Function) => {
+const validateRequest = (req: Request, res: Response, next: NextFunction) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({

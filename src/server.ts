@@ -12,6 +12,6 @@ app.use("/api/v1/", userRoutes);
 
 // Routes
 
-app.listen(config.port, () => {
-  console.log(`server run in port ${config.port}`);
+app.listen(config.PORT, () => {
+  console.log(`server run in port ${config.PORT}`);
 });

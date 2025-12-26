@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import user_model from "../models/user.model.js";
+import usermodel from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import config from "../configs/env.config.js";
 import jwt from "jsonwebtoken";
@@ -8,34 +8,43 @@ import mongoose from "mongoose";
 // Signup controller ----------------------------------------------------->
 const signup = async (req: Request, res: Response) => {
   try {
-    const { name, email, type, password, role } = req.body;
+    const { username, fullname, email, password, role } = req.body;
 
     // Check if all required fields are provided
-    if (!name || !email || !type || !password || !role) {
+    if (!username || !fullname || !email || !password || !role) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
     // Check if user already exists by email
-    const existing_user = await user_model.findOne({ email });
-    if (existing_user) {
-      return res.status(409).json({ message: "User already exists" });
+
+    const emailUser = await usermodel.findOne({ email });
+    if (emailUser) {
+      return res.status(409).json({ message: "Email already exists" });
     }
 
-    const hash_password = await bcrypt.hash(password, 10);
+    // Check username second
+    const usernameUser = await usermodel.findOne({ username });
+    if (usernameUser) {
+      return res.status(409).json({ message: "Username already exists" });
+    }
+
+    const hashPassword = await bcrypt.hash(password, 10);
 
     // Create the new user
-    const new_user = await user_model.create({
-      name,
+    const newUser = await new usermodel({
+      username,
+      fullname,
       email,
-      type,
       role,
-      password: hash_password,
-    });
+      password: hashPassword,
+    }).save();
 
     // Success response
-    res
-      .status(201)
-      .json({ message: "User created successfully", user: new_user });
+    const { password: _, __v: __, ...safeUser } = newUser.toObject();
+    res.status(201).json({
+      message: "User created successfully",
+      user: safeUser,
+    });
   } catch (err: any) {
     res
       .status(500)
@@ -56,35 +65,35 @@ const login = async (req: Request, res: Response) => {
     }
 
     // Check if user exists by email
-    const find_user = await user_model.findOne({ email });
-    if (!find_user) {
+    const findUser = await usermodel.findOne({ email });
+    if (!findUser) {
       return res.status(404).json({ message: "User not found" });
     }
 
     // Validate the password
-    const validate_password = await bcrypt.compare(
-      password,
-      find_user.password
-    );
-    if (!validate_password) {
+    const validatePassword = await bcrypt.compare(password, findUser.password);
+    if (!validatePassword) {
       return res.status(401).json({ message: "Wrong password, try again" });
     }
 
     // Generate JWT token
-    const token_secret = config.jwt_secret;
-    if (!token_secret) {
+    const tokenSecret = config.JWT_SECRET;
+    if (!tokenSecret) {
       return res.status(500).json({ message: "Token secret is not defined" });
     }
     const token = jwt.sign(
-      { id: find_user._id, role: find_user.role },
-      token_secret,
+      { id: findUser.id, role: findUser.role },
+      tokenSecret,
       { expiresIn: "1d" }
     );
 
     // Success response
-    return res
-      .status(200)
-      .json({ message: "Login successful", user: find_user, token });
+    const { password: _, __v: __, ...safeUser } = findUser.toObject();
+    return res.status(200).json({
+      message: "Login successful",
+      user: safeUser, // ✅ Clean TypeScript
+      token,
+    });
   } catch (err: any) {
     res
       .status(500)
@@ -95,44 +104,52 @@ const login = async (req: Request, res: Response) => {
 // Edit user controller ----------------------------------------------------->
 const editUser = async (req: Request, res: Response) => {
   try {
-    const user_id = req.params.id;
-    const { name, email, new_password, retype_password } = req.body;
+    const userId = req.params.id;
+    const { username, fullname, email, newPassword, retypePassword } = req.body;
 
-    // Check if user_id is provided and is a valid ObjectId
-    if (!user_id || !mongoose.isValidObjectId(user_id)) {
+    // Check if userId is provided and is a valid ObjectId
+    if (!userId || !mongoose.isValidObjectId(userId)) {
       return res.status(400).json({ message: "Provide a valid user ID" });
     }
 
     // Build the update object
-    const new_user: any = {};
+    const newUser: any = {};
 
-    // Assign new values to the update object
-    if (name) new_user.name = name;
+    // Check if username is already in use by another user
+    if (username) {
+      const usernameExists = await usermodel.findOne({ username });
+      if (usernameExists && usernameExists.id.toString() !== userId) {
+        return res.status(409).json({ message: "Username already in use" });
+      }
+      newUser.username = username;
+    }
+
+    if (fullname) newUser.fullname = fullname;
 
     // Check if email is already in use by another user
     if (email) {
-      const email_exists = await user_model.findOne({ email });
-      if (email_exists && email_exists._id.toString() !== user_id) {
+      const emailExists = await usermodel.findOne({ email });
+      if (emailExists && emailExists.id.toString() !== userId) {
         return res.status(409).json({ message: "Email already in use" });
       }
-      new_user.email = email;
+      newUser.email = email;
     }
 
     // Hash the new password if provided
-    if (new_password) {
-      if (new_password !== retype_password) {
+    if (newPassword) {
+      if (newPassword !== retypePassword) {
         return res.status(400).json({ message: "Passwords do not match" });
       }
-      new_user.password = await bcrypt.hash(new_password, 10);
+      newUser.password = await bcrypt.hash(newPassword, 10);
     }
 
     // Check if at least one field is provided
-    if (Object.keys(new_user).length === 0) {
+    if (Object.keys(newUser).length === 0) {
       return res.status(400).json({ message: "No fields to update" });
     }
 
     // Update the user
-    const updatedUser = await user_model.findByIdAndUpdate(user_id, new_user, {
+    const updatedUser = await usermodel.findByIdAndUpdate(userId, newUser, {
       new: true,
       runValidators: true,
     });
@@ -142,9 +159,10 @@ const editUser = async (req: Request, res: Response) => {
     }
 
     // Success response
+    const { password: _, __v: __, ...safeUser } = updatedUser.toObject();
     return res
       .status(200)
-      .json({ message: "User updated successfully", user: updatedUser });
+      .json({ message: "User updated successfully", user: safeUser });
   } catch (err: any) {
     res
       .status(500)
@@ -155,15 +173,15 @@ const editUser = async (req: Request, res: Response) => {
 // Delete user controller ----------------------------------------------------->
 const deleteUser = async (req: Request, res: Response) => {
   try {
-    const user_id = req.params.id;
+    const userId = req.params.id;
 
-    // Check if user_id is provided and is a valid ObjectId
-    if (!user_id || !mongoose.isValidObjectId(user_id))
+    // Check if userId is provided and is a valid ObjectId
+    if (!userId || !mongoose.isValidObjectId(userId))
       return res.status(400).json({ message: "Provide a valid user ID" });
 
     // Delete the user
-    const deleted_user = await user_model.findByIdAndDelete(user_id);
-    if (!deleted_user)
+    const deletedUser = await usermodel.findByIdAndDelete(userId);
+    if (!deletedUser)
       return res.status(404).json({ message: "User not found" });
 
     // Success response
@@ -171,7 +189,7 @@ const deleteUser = async (req: Request, res: Response) => {
   } catch (err: any) {
     res
       .status(500)
-      .json({ message: "Internal server error.", error: err.message });
+      .json({ message: "Internal server error", error: err.message });
   }
 };
 
@@ -181,7 +199,7 @@ const logout = async (req: Request, res: Response) => {
     // Clear the JWT token cookie (client-side invalidation)
     res.clearCookie("token", {
       httpOnly: true,
-      secure: config.node_env === "production",
+      secure: config.NODE_ENV === "production",
       sameSite: "strict",
     });
     // Success response
