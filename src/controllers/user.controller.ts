@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import user_model from "../models/user.model";
+import user_model from "../models/user.model.js";
 import bcrypt from "bcrypt";
-import config from "../configs/env.config";
+import config from "../configs/env.config.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 

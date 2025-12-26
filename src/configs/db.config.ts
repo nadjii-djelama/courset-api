@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
-import config from "./env.config";
+import config from "./env.config.js";
 
 const dbConnection = async (): Promise<void> => {
   try {
-    const conn = await mongoose.connect(config.mongo_uri);
+    const conn = await mongoose.connect(config.mongo_uri!);
 
     // Proper connection verification
     console.log(

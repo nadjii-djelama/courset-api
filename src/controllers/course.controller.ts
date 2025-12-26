@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import course_model from "../models/course.model";
+import course_model from "../models/course.model.js";
 
 // Create a course controller ----------------------------------------------------->
 const createCourse = async (req: Request, res: Response) => {

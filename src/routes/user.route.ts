@@ -8,7 +8,7 @@ import {
   editUser,
   deleteUser,
   logout,
-} from "../controllers/user.controller";
+} from "../controllers/user.controller.js";
 
 router.post("signup", signup);
 router.post("login", login);

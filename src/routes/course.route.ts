@@ -4,7 +4,7 @@ const router = Router();
 import {
   validateRequest,
   courseValidationRules,
-} from "../middlewares/validationCheck.middleware";
+} from "../middlewares/validationCheck.middleware.js";
 
 import {
   createCourse,
@@ -14,7 +14,7 @@ import {
   deleteSpecificCourse,
   deleteAllCourses,
   filterCourses,
-} from "../controllers/course.controller";
+} from "../controllers/course.controller.js";
 
 //Get Requests
 router.get("/courses", getCourses);
