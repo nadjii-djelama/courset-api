@@ -199,6 +199,21 @@ const deleteUser = async (req: Request, res: Response) => {
   }
 };
 
+// delete all users controller ----------------------------------------------------->
+const deleteAllUsers = async (req: Request, res: Response) => {
+  try {
+    const result = await user_model.deleteMany({});
+    return res.status(200).json({
+      message: "All users deleted",
+      deletedCount: result.deletedCount,
+    });
+  } catch (err: any) {
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: err.message });
+  }
+};
+
 // logout controller ----------------------------------------------------->
 const logout = async (req: Request, res: Response) => {
   try {
@@ -229,4 +244,12 @@ const getAllUsers = async (req: Request, res: Response) => {
   }
 };
 
-export { signup, login, editUser, deleteUser, logout, getAllUsers };
+export {
+  signup,
+  login,
+  editUser,
+  deleteUser,
+  deleteAllUsers,
+  logout,
+  getAllUsers,
+};
