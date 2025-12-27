@@ -8,12 +8,15 @@ import {
   editUser,
   deleteUser,
   logout,
+  getAllUsers,
 } from "../controllers/user.controller.js";
 
-router.post("signup", signup);
-router.post("login", login);
-router.put("edit-info", editUser);
-router.delete("delete", deleteUser);
-router.post("logout", logout);
+router.get("/users", getAllUsers);
+
+router.post("/signup", signup);
+router.post("/login", login);
+router.put("/edit-info", editUser);
+router.delete("/delete", deleteUser);
+router.post("/logout", logout);
 
 export default router;

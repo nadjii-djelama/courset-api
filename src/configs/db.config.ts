@@ -3,7 +3,7 @@ import config from "./env.config.js";
 
 const dbConnection = async (): Promise<void> => {
   try {
-    const conn = await mongoose.connect(config.mongo_uri!);
+    const conn = await mongoose.connect(config.MONGO_URI!);
 
     // Proper connection verification
     console.log(

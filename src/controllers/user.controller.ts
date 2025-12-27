@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import usermodel from "../models/user.model.js";
+import user_model from "../models/user.model";
 import bcrypt from "bcrypt";
-import config from "../configs/env.config.js";
+import config from "../configs/env.config";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
@@ -17,27 +17,33 @@ const signup = async (req: Request, res: Response) => {
 
     // Check if user already exists by email
 
-    const emailUser = await usermodel.findOne({ email });
+    const emailUser = await user_model.findOne({ email });
     if (emailUser) {
       return res.status(409).json({ message: "Email already exists" });
     }
 
     // Check username second
-    const usernameUser = await usermodel.findOne({ username });
+    const usernameUser = await user_model.findOne({ username });
     if (usernameUser) {
       return res.status(409).json({ message: "Username already exists" });
     }
 
+    // check role validity
+    if (role === "admin") {
+      return res.status(403).json({ message: "Cannot assign admin role" });
+    }
+
+    // Hash the password
     const hashPassword = await bcrypt.hash(password, 10);
 
     // Create the new user
-    const newUser = await new usermodel({
+    const newUser = await user_model.create({
       username,
       fullname,
       email,
       role,
       password: hashPassword,
-    }).save();
+    });
 
     // Success response
     const { password: _, __v: __, ...safeUser } = newUser.toObject();
@@ -65,7 +71,7 @@ const login = async (req: Request, res: Response) => {
     }
 
     // Check if user exists by email
-    const findUser = await usermodel.findOne({ email });
+    const findUser = await user_model.findOne({ email });
     if (!findUser) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -117,7 +123,7 @@ const editUser = async (req: Request, res: Response) => {
 
     // Check if username is already in use by another user
     if (username) {
-      const usernameExists = await usermodel.findOne({ username });
+      const usernameExists = await user_model.findOne({ username });
       if (usernameExists && usernameExists.id.toString() !== userId) {
         return res.status(409).json({ message: "Username already in use" });
       }
@@ -128,7 +134,7 @@ const editUser = async (req: Request, res: Response) => {
 
     // Check if email is already in use by another user
     if (email) {
-      const emailExists = await usermodel.findOne({ email });
+      const emailExists = await user_model.findOne({ email });
       if (emailExists && emailExists.id.toString() !== userId) {
         return res.status(409).json({ message: "Email already in use" });
       }
@@ -149,7 +155,7 @@ const editUser = async (req: Request, res: Response) => {
     }
 
     // Update the user
-    const updatedUser = await usermodel.findByIdAndUpdate(userId, newUser, {
+    const updatedUser = await user_model.findByIdAndUpdate(userId, newUser, {
       new: true,
       runValidators: true,
     });
@@ -180,7 +186,7 @@ const deleteUser = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Provide a valid user ID" });
 
     // Delete the user
-    const deletedUser = await usermodel.findByIdAndDelete(userId);
+    const deletedUser = await user_model.findByIdAndDelete(userId);
     if (!deletedUser)
       return res.status(404).json({ message: "User not found" });
 
@@ -193,7 +199,7 @@ const deleteUser = async (req: Request, res: Response) => {
   }
 };
 
-// Logout controller
+// logout controller ----------------------------------------------------->
 const logout = async (req: Request, res: Response) => {
   try {
     // Clear the JWT token cookie (client-side invalidation)
@@ -211,4 +217,16 @@ const logout = async (req: Request, res: Response) => {
   }
 };
 
-export { signup, login, editUser, deleteUser, logout };
+// getAllUsers controller ----------------------------------------------------->
+const getAllUsers = async (req: Request, res: Response) => {
+  try {
+    const users = await user_model.find().select("-password -__v");
+    return res.status(200).json({ users });
+  } catch (err: any) {
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: err.message });
+  }
+};
+
+export { signup, login, editUser, deleteUser, logout, getAllUsers };

@@ -1,17 +1,27 @@
-import express from "express";
+import express, { urlencoded } from "express";
 import config from "./configs/env.config.js";
 import dbConnection from "./configs/db.config.js";
 const app = express();
-await dbConnection();
+
+import userRoutes from "./routes/user.route.js";
 
 // Middlewares
 app.use(express.json());
+app.use(urlencoded({ extended: true }));
 
-import userRoutes from "./routes/user.route.js";
-app.use("/api/v1/", userRoutes);
+app.use("/api/v1", userRoutes);
 
 // Routes
 
-app.listen(config.PORT, () => {
-  console.log(`server run in port ${config.PORT}`);
-});
+const startServer = async () => {
+  try {
+    await dbConnection();
+
+    app.listen(config.PORT, () => {
+      console.log(`server run in port ${config.PORT}`);
+    });
+  } catch (err: any) {
+    console.log(err.message);
+  }
+};
+startServer();
