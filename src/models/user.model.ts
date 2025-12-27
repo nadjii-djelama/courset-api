@@ -4,12 +4,13 @@ const user_schema = new mongoose.Schema({
   username: {
     type: String,
     required: true,
+    minLength: 3,
     maxLength: 20,
     lowercase: true,
     index: true,
     unique: true,
   },
-  fullname: { type: String, required: true, maxLength: 20 },
+  fullname: { type: String, required: true, minLength: 3, maxLength: 20 },
   email: {
     type: String,
     required: true,

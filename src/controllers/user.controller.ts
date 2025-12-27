@@ -8,42 +8,81 @@ import mongoose from "mongoose";
 // Signup controller ----------------------------------------------------->
 const signup = async (req: Request, res: Response) => {
   try {
-    const { username, fullname, email, password, role } = req.body;
+    const { username, fullname, email, password, retypePassword, role } =
+      req.body;
 
     // Check if all required fields are provided
-    if (!username || !fullname || !email || !password || !role) {
+    if (
+      !username ||
+      !fullname ||
+      !email ||
+      !password ||
+      !retypePassword ||
+      !role
+    ) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // Check if user already exists by email
+    // check if the username and fullname are have the right length characters
+    if (
+      username.length > 20 ||
+      username.length < 3 ||
+      fullname.length > 20 ||
+      fullname.length < 3
+    ) {
+      return res.status(400).json({
+        message: "Username and Fullname must have 3 to 20 characters",
+      });
+    }
+    const normalised = {
+      username: username.toLowerCase().trim(),
+      email: email.toLowerCase().trim(),
+      role: role.toLowerCase().trim(),
+    };
+    // Sent all the queryis to the DB just one time
+    const [count, emailUser, usernameUser] = await Promise.all([
+      normalised.role === "admin"
+        ? user_model.countDocuments({ role: "admin" })
+        : 0,
+      user_model.findOne({ email: normalised.email }),
+      user_model.findOne({
+        username: normalised.username,
+      }),
+    ]);
 
-    const emailUser = await user_model.findOne({ email });
+    // check role validity
+    if (normalised.role === "admin" && count >= 1) {
+      return res.status(403).json({ message: "Admin role already exists" });
+    }
+
+    // Check if user already exists by email
     if (emailUser) {
       return res.status(409).json({ message: "Email already exists" });
     }
 
     // Check username second
-    const usernameUser = await user_model.findOne({ username });
     if (usernameUser) {
       return res.status(409).json({ message: "Username already exists" });
     }
 
-    // check role validity
-    if (role === "admin") {
-      return res.status(403).json({ message: "Cannot assign admin role" });
+    // Check if passwords match
+    if (password !== retypePassword) {
+      return res.status(400).json({ message: "Passwords do not match" });
     }
 
     // Hash the password
     const hashPassword = await bcrypt.hash(password, 10);
 
     // Create the new user
-    const newUser = await user_model.create({
-      username,
+    const newUser = new user_model({
+      username: normalised.username,
       fullname,
-      email,
-      role,
+      email: normalised.email,
+      role: normalised.role,
       password: hashPassword,
     });
+
+    await newUser.save();
 
     // Success response
     const { password: _, __v: __, ...safeUser } = newUser.toObject();
@@ -69,11 +108,11 @@ const login = async (req: Request, res: Response) => {
         .status(400)
         .json({ message: "Email and password are required" });
     }
-
+    const normalisedEmail = email.toLowerCase().trim();
     // Check if user exists by email
-    const findUser = await user_model.findOne({ email });
+    const findUser = await user_model.findOne({ email: normalisedEmail });
     if (!findUser) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: "User does not exist" });
     }
 
     // Validate the password
@@ -117,28 +156,33 @@ const editUser = async (req: Request, res: Response) => {
     if (!userId || !mongoose.isValidObjectId(userId)) {
       return res.status(400).json({ message: "Provide a valid user ID" });
     }
-
+    const normalised = {
+      username: username.toLowerCase().trim(),
+      email: email.toLowerCase().trim(),
+    };
     // Build the update object
     const newUser: any = {};
 
     // Check if username is already in use by another user
     if (username) {
-      const usernameExists = await user_model.findOne({ username });
+      const usernameExists = await user_model.findOne({
+        username: normalised.username,
+      });
       if (usernameExists && usernameExists.id.toString() !== userId) {
         return res.status(409).json({ message: "Username already in use" });
       }
-      newUser.username = username;
+      newUser.username = normalised.username;
     }
 
     if (fullname) newUser.fullname = fullname;
 
     // Check if email is already in use by another user
     if (email) {
-      const emailExists = await user_model.findOne({ email });
+      const emailExists = await user_model.findOne({ email: normalised.email });
       if (emailExists && emailExists.id.toString() !== userId) {
         return res.status(409).json({ message: "Email already in use" });
       }
-      newUser.email = email;
+      newUser.email = normalised.email;
     }
 
     // Hash the new password if provided
@@ -236,6 +280,9 @@ const logout = async (req: Request, res: Response) => {
 const getAllUsers = async (req: Request, res: Response) => {
   try {
     const users = await user_model.find().select("-password -__v");
+    if (users.length === 0) {
+      return res.status(404).json({ message: "No users found" });
+    }
     return res.status(200).json({ users });
   } catch (err: any) {
     res
