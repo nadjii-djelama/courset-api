@@ -16,14 +16,17 @@ import {
   filterCourses,
 } from "../controllers/course.controller.js";
 
+import { authentication } from "../middlewares/auth.middleware.js";
+
 //Get Requests
-router.get("/courses", getCourses);
-router.get("/course/:id", getSpecificCourse);
-router.get("/courses/filter", filterCourses);
+router.get("/courses", authentication, getCourses);
+router.get("/course/:id", authentication, getSpecificCourse);
+router.get("/courses/filter", authentication, filterCourses);
 
 //Post Requests
 router.post(
   "/create-course",
+  authentication,
   courseValidationRules,
   validateRequest,
   createCourse
@@ -32,11 +35,14 @@ router.post(
 //Put Requests
 router.put(
   "/edit/course/:id",
+  authentication,
   courseValidationRules,
   validateRequest,
   editCourse
 );
 
 //delete Requests
-router.delete("/delete/course/:id", deleteSpecificCourse);
-router.delete("/delete/courses", deleteAllCourses);
+router.delete("/delete/course/:id", authentication, deleteSpecificCourse);
+router.delete("/delete/courses", authentication, deleteAllCourses);
+
+export default router;

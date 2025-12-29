@@ -11,15 +11,15 @@ import {
   logout,
   getAllUsers,
 } from "../controllers/user.controller.js";
+import { authentication } from "../middlewares/auth.middleware.js";
 
-router.get("/users", getAllUsers);
+router.get("/users", authentication, getAllUsers);
 
 router.post("/signup", signup);
 router.post("/login", login);
 router.post("/logout", logout);
-router.put("/edit-info", editUser);
+router.put("/edit-info", authentication, editUser);
 
-router.delete("/delete/:id", deleteUser);
-router.delete("/delete-all", deleteAllUsers);
-
+router.delete("/delete/:id", authentication, deleteUser);
+router.delete("/delete-all", authentication, deleteAllUsers);
 export default router;
