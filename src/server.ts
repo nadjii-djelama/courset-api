@@ -3,13 +3,15 @@ import config from "./configs/env.config.js";
 import dbConnection from "./configs/db.config.js";
 const app = express();
 
-import userRoutes from "./routes/user.route.js";
+import userRoute from "./routes/user.route.js";
+import courseRoute from "./routes/course.route.js";
 
 // Middlewares
 app.use(express.json());
 app.use(urlencoded({ extended: true }));
 
-app.use("/api/v1", userRoutes);
+app.use("/api/v1", userRoute);
+app.use("/api/v1", courseRoute);
 
 // Routes
 

@@ -5,6 +5,13 @@ import config from "../configs/env.config";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
+interface UserPayload {
+  id: string;
+}
+export interface AuthenticatedRequest extends Request {
+  user?: UserPayload;
+}
+
 // Signup controller ----------------------------------------------------->
 const signup = async (req: Request, res: Response) => {
   try {
@@ -147,18 +154,21 @@ const login = async (req: Request, res: Response) => {
 };
 
 // Edit user controller ----------------------------------------------------->
-const editUser = async (req: Request, res: Response) => {
+const editUser = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = req.params.id;
-    const { username, fullname, email, newPassword, retypePassword } = req.body;
+    const userId = req.user?.id;
+    const { username, fullname, email, password, retypePassword } = req.body;
 
-    // Check if userId is provided and is a valid ObjectId
-    if (!userId || !mongoose.isValidObjectId(userId)) {
-      return res.status(400).json({ message: "Provide a valid user ID" });
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (!mongoose.isValidObjectId(userId)) {
+      return res.status(400).json({ message: "Invalid user ID in JWT" });
     }
     const normalised = {
-      username: username.toLowerCase().trim(),
-      email: email.toLowerCase().trim(),
+      username: username ? username.toLowerCase().trim() : undefined,
+      email: email ? email.toLowerCase().trim() : undefined,
     };
     // Build the update object
     const newUser: any = {};
@@ -178,7 +188,9 @@ const editUser = async (req: Request, res: Response) => {
 
     // Check if email is already in use by another user
     if (email) {
-      const emailExists = await user_model.findOne({ email: normalised.email });
+      const emailExists = await user_model.findOne({
+        email: normalised.email,
+      });
       if (emailExists && emailExists.id.toString() !== userId) {
         return res.status(409).json({ message: "Email already in use" });
       }
@@ -186,11 +198,11 @@ const editUser = async (req: Request, res: Response) => {
     }
 
     // Hash the new password if provided
-    if (newPassword) {
-      if (newPassword !== retypePassword) {
+    if (password) {
+      if (password !== retypePassword) {
         return res.status(400).json({ message: "Passwords do not match" });
       }
-      newUser.password = await bcrypt.hash(newPassword, 10);
+      newUser.password = await bcrypt.hash(password, 10);
     }
 
     // Check if at least one field is provided
@@ -201,7 +213,6 @@ const editUser = async (req: Request, res: Response) => {
     // Update the user
     const updatedUser = await user_model.findByIdAndUpdate(userId, newUser, {
       new: true,
-      runValidators: true,
     });
 
     if (!updatedUser) {
@@ -209,10 +220,9 @@ const editUser = async (req: Request, res: Response) => {
     }
 
     // Success response
-    const { password: _, __v: __, ...safeUser } = updatedUser.toObject();
     return res
       .status(200)
-      .json({ message: "User updated successfully", user: safeUser });
+      .json({ message: "User updated successfully", user: updatedUser });
   } catch (err: any) {
     res
       .status(500)

@@ -6,6 +6,7 @@ const course_schema = new mongoose.Schema(
       type: String,
       required: true,
       maxLength: 100,
+      index: true,
     },
     description: {
       type: String,
@@ -35,6 +36,7 @@ const course_schema = new mongoose.Schema(
       ],
       default: "other",
       lowercase: true,
+      index: true,
     },
     reviews: {
       type: Number,
@@ -47,13 +49,13 @@ const course_schema = new mongoose.Schema(
       ref: "User",
       required: true,
       index: true,
-      lowercase: true,
     },
     price: {
       type: Number,
       required: true,
       default: 0,
       min: 0,
+      index: true,
     },
     payment_system: {
       type: String,
@@ -62,9 +64,10 @@ const course_schema = new mongoose.Schema(
       required: true,
     },
     coupon_code: {
-      type: String,
+      type: [String],
       maxLength: 15,
       minLength: 3,
+      default: [],
     },
     isPublished: {
       type: Boolean,
@@ -85,33 +88,15 @@ const course_schema = new mongoose.Schema(
       required: true,
       enum: ["en", "fr", "gr", "es", "it", "id", "jp", "ch", "rs"],
       default: ["en"],
-      validate: {
-        validator: function (v: String[]) {
-          return v && v.length >= 1;
-        },
-        message: "At least one language is required",
-      },
       lowercase: true,
     },
     requirements: {
       type: [String],
       required: true,
-      validate: {
-        validator: function (v: String[]) {
-          return v && v.length >= 1;
-        },
-        message: "At least one requirement is required",
-      },
     },
     sections: {
       type: [String],
       required: true,
-      validate: {
-        validator: function (v: String[]) {
-          return v && v.length >= 2;
-        },
-        message: "At least two section is required",
-      },
     },
   },
   { timestamps: true }

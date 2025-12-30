@@ -1,11 +1,19 @@
 import { Request, Response } from "express";
 import course_model from "../models/course.model.js";
 
+interface UserPayload {
+  id: string;
+}
+export interface AuthenticatedRequest extends Request {
+  user?: UserPayload;
+}
+
 // Create a course controller ----------------------------------------------------->
-const createCourse = async (req: Request, res: Response) => {
+const createCourse = async (req: AuthenticatedRequest, res: Response) => {
   try {
     // Create new course from validated request body
-    const course = await course_model.create(req.body);
+    const authorId = req.user?.id;
+    const course = await course_model.create({ ...req.body, author: authorId });
 
     // Return created course with 201 status
     return res.status(201).json({
@@ -172,14 +180,23 @@ const filterCourses = async (req: Request, res: Response) => {
 
     // Handle price filtering (exact or range)
     if (price) {
-      const prices: any = Array.isArray(price) ? price : [price];
-      if (prices.length === 1) {
-        query.price = prices[0]; // Exact price match
+      let prices: number[];
+
+      if (Array.isArray(price)) {
+        prices = price.map((p) => Number(p)).filter((p) => !isNaN(p));
       } else {
-        // Price range: min <= price <= max
+        // Split "10,20" → ["10", "20"] → [10, 20]
+        prices = String(price)
+          .split(",")
+          .map((p) => Number(p.trim()))
+          .filter((p) => !isNaN(p));
+      }
+
+      // Need valid min/max range
+      if (prices.length >= 2) {
         query.price = {
-          $gte: Number(Math.min(...prices)),
-          $lte: Number(Math.max(...prices)),
+          $gte: Math.min(...prices),
+          $lte: Math.max(...prices),
         };
       }
     }
