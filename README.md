@@ -3,7 +3,6 @@
 <!-- HEADER STYLE: CLASSIC -->
 <div align="center">
 
-
 # COURSET-API
 
 <em>Empowering Learning, Accelerating Success Seamlessly</em>
@@ -35,10 +34,10 @@
 
 - [Overview](#overview)
 - [Getting Started](#getting-started)
-    - [Prerequisites](#prerequisites)
-    - [Installation](#installation)
-    - [Usage](#usage)
-    - [Testing](#testing)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+  - [Usage](#usage)
+  - [Testing](#testing)
 
 ---
 
@@ -58,61 +57,161 @@ This project simplifies backend development for course-based applications, ensur
 
 ---
 
-## Getting Started
+# COURSET-API
 
-### Prerequisites
+A lightweight backend API for course and user management built with TypeScript, Express, and MongoDB.
 
-This project requires the following dependencies:
+---
 
-- **Programming Language:** TypeScript
-- **Package Manager:** Npm
+## Summary
 
-### Installation
+- Language: TypeScript
+- Framework: Express
+- Database: MongoDB (Mongoose)
+- Auth: JWT-based authentication and role-based access control
 
-Build courset-api from the source and install dependencies:
+This repository provides a simple structure for user and course management including validation, middleware, and authentication.
 
-1. **Clone the repository:**
+---
 
-    ```sh
-    ❯ git clone https://github.com/nadjii-djelama/courset-api
-    ```
+## Repository Layout
 
-2. **Navigate to the project directory:**
+- `src/server.ts` — application entry
+- `src/configs/` — env, db, redis configuration helpers
+- `src/routes/` — Express routes (`user.route.ts`, `course.route.ts`)
+- `src/controllers/` — route handlers
+- `src/models/` — Mongoose schemas/models
+- `src/middlewares/` — authentication, role-based access, validation
 
-    ```sh
-    ❯ cd courset-api
-    ```
+---
 
-3. **Install the dependencies:**
+## Quick Start
 
-**Using [npm](https://www.npmjs.com/):**
+Prerequisites:
 
-```sh
-❯ npm install
+- Node.js v18+ and npm
+- MongoDB (local or Atlas)
+
+Install dependencies:
+
+```bash
+npm install
 ```
 
-### Usage
+Create a `.env` file (copy from provided example if any) and set at least:
 
-Run the project with:
+- `PORT` — server port (defaults to 4000 in code)
+- `MONGODB_URI` — MongoDB connection string
+- `JWT_SECRET` — JWT signing secret
+- `NODE_ENV` — environment (development/production)
 
-**Using [npm](https://www.npmjs.com/):**
+Run in development:
 
-```sh
+```bash
+npm run dev
+```
+
+Build and run (production):
+
+```bash
+npm run build
 npm start
 ```
 
-### Testing
+Docker (simple):
 
-Courset-api uses the {__test_framework__} test framework. Run the test suite with:
+The included `dockerfile` expects a built `dist/` folder. Build locally first, then build the image:
 
-**Using [npm](https://www.npmjs.com/):**
+```bash
+npm run build
+docker build -t courset-api .
+docker run -p 3000:3000 --env-file .env courset-api
+```
 
-```sh
+---
+
+## API Overview
+
+Base path: `/api/v1`
+
+Common endpoints (reference `src/routes/` for full details):
+
+- `POST /api/v1/users` — register user
+- `POST /api/v1/users/login` — login and receive JWT
+- `GET /api/v1/courses` — list courses
+- `POST /api/v1/courses` — create course (protected)
+
+Example curl (register):
+
+```bash
+curl -X POST http://localhost:3000/api/v1/users \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"password"}'
+```
+
+---
+
+## Important files
+
+- `src/configs/env.config.ts` — centralizes env variables
+- `src/configs/db.config.ts` — mongoose connection helper
+- `src/server.ts` — app bootstrap and route wiring
+
+---
+
+## Scripts
+
+- `npm run dev` — run in watch mode (`tsx`)
+- `npm run build` — compile TypeScript
+- `npm start` — run compiled output
+- `npm test` — run tests with Jest
+
+---
+
+## Testing
+
+Tests use Jest. Test convention: `**/__tests__/**/*.test.ts`.
+
+```bash
 npm test
 ```
 
 ---
 
-<div align="left"><a href="#top">⬆ Return</a></div>
+## Contributing
+
+1. Fork the repo
+2. Create a feature branch
+3. Add tests and update types where applicable
+4. Open a PR with a clear description
 
 ---
+
+## LLM Agent Prompt (optional)
+
+Use this prompt when asking an LLM to work on this repository:
+
+"You are an experienced TypeScript backend engineer with full repository access. The repo contains `src/` (Express server, routes, controllers, models, middlewares), `tsconfig.json`, `package.json`, and a `dockerfile`.
+
+Goals:
+
+- Make minimal, well-tested changes and prefer small focused commits.
+- Preserve file layout and public APIs unless explicitly asked to refactor.
+- Run `npm run build` and `npm test` after edits; fix only issues introduced by your changes.
+
+When implementing work:
+
+1. Provide a short actionable plan and record it in a TODO list.
+2. Modify only the files required for the task.
+3. Run the TypeScript compiler and tests; if tests fail, fix failures caused by your changes only.
+4. Return a concise summary of edits with file links and commands to reproduce.
+
+Constraints:
+
+- Never expose secrets; replace any real secrets with placeholders.
+- Do not upgrade major dependencies without justification.
+  "
+
+---
+
+If you want, I can commit this README for you, add an OpenAPI spec, or generate example Postman requests next.
