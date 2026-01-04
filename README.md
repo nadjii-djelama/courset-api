@@ -184,34 +184,3 @@ npm test
 2. Create a feature branch
 3. Add tests and update types where applicable
 4. Open a PR with a clear description
-
----
-
-## LLM Agent Prompt (optional)
-
-Use this prompt when asking an LLM to work on this repository:
-
-"You are an experienced TypeScript backend engineer with full repository access. The repo contains `src/` (Express server, routes, controllers, models, middlewares), `tsconfig.json`, `package.json`, and a `dockerfile`.
-
-Goals:
-
-- Make minimal, well-tested changes and prefer small focused commits.
-- Preserve file layout and public APIs unless explicitly asked to refactor.
-- Run `npm run build` and `npm test` after edits; fix only issues introduced by your changes.
-
-When implementing work:
-
-1. Provide a short actionable plan and record it in a TODO list.
-2. Modify only the files required for the task.
-3. Run the TypeScript compiler and tests; if tests fail, fix failures caused by your changes only.
-4. Return a concise summary of edits with file links and commands to reproduce.
-
-Constraints:
-
-- Never expose secrets; replace any real secrets with placeholders.
-- Do not upgrade major dependencies without justification.
-  "
-
----
-
-If you want, I can commit this README for you, add an OpenAPI spec, or generate example Postman requests next.
