@@ -1,6 +1,7 @@
 import express, { urlencoded } from "express";
 import config from "./configs/env.config.js";
 import dbConnection from "./configs/db.config.js";
+import { redisServer } from "./configs/redis.config.js";
 const app = express();
 
 import userRoute from "./routes/user.route.js";
@@ -18,12 +19,13 @@ app.use("/api/v1", courseRoute);
 const startServer = async () => {
   try {
     await dbConnection();
+    await redisServer();
 
     app.listen(config.PORT, () => {
-      console.log(`server run in port ${config.PORT}`);
+      console.log(`✅ server run in port ${config.PORT}`);
     });
   } catch (err: any) {
-    console.log(err.message);
+    console.log(`❌ ${err.message}`);
   }
 };
 startServer();
