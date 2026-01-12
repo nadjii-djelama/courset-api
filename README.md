@@ -1,124 +1,113 @@
-<div id="top">
-
-<!-- HEADER STYLE: CLASSIC -->
-<div align="center">
-
 # COURSET-API
 
-<em>Empowering Learning, Accelerating Success Seamlessly</em>
-
-<!-- BADGES -->
-<img src="https://img.shields.io/github/last-commit/nadjii-djelama/courset-api?style=flat&logo=git&logoColor=white&color=0080ff" alt="last-commit">
-<img src="https://img.shields.io/github/languages/top/nadjii-djelama/courset-api?style=flat&color=0080ff" alt="repo-top-language">
-<img src="https://img.shields.io/github/languages/count/nadjii-djelama/courset-api?style=flat&color=0080ff" alt="repo-language-count">
-
-<em>Built with the tools and technologies:</em>
-
-<img src="https://img.shields.io/badge/Express-000000.svg?style=flat&logo=Express&logoColor=white" alt="Express">
-<img src="https://img.shields.io/badge/JSON-000000.svg?style=flat&logo=JSON&logoColor=white" alt="JSON">
-<img src="https://img.shields.io/badge/npm-CB3837.svg?style=flat&logo=npm&logoColor=white" alt="npm">
-<img src="https://img.shields.io/badge/Mongoose-F04D35.svg?style=flat&logo=Mongoose&logoColor=white" alt="Mongoose">
-<img src="https://img.shields.io/badge/.ENV-ECD53F.svg?style=flat&logo=dotenv&logoColor=black" alt=".ENV">
-<br>
-<img src="https://img.shields.io/badge/MongoDB-47A248.svg?style=flat&logo=MongoDB&logoColor=white" alt="MongoDB">
-<img src="https://img.shields.io/badge/TypeScript-3178C6.svg?style=flat&logo=TypeScript&logoColor=white" alt="TypeScript">
-<img src="https://img.shields.io/badge/tsnode-3178C6.svg?style=flat&logo=ts-node&logoColor=white" alt="tsnode">
-<img src="https://img.shields.io/badge/Jest-C21325.svg?style=flat&logo=Jest&logoColor=white" alt="Jest">
-
-</div>
-<br>
+A concise README summarizing recent updates and how to get the project running locally.
 
 ---
 
-## Table of Contents
+**What's new / Key updates**
 
-- [Overview](#overview)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Usage](#usage)
-  - [Testing](#testing)
-
----
-
-## Overview
-
-courset-api is a full-featured backend API designed to power educational platforms with secure user and course management. Built with Node.js, Express, and MongoDB, it offers a scalable and maintainable architecture for modern web applications.
-
-**Why courset-api?**
-
-This project simplifies backend development for course-based applications, ensuring secure data handling and role-based access control. The core features include:
-
-- 🛡️ **🔑 Authentication & Authorization:** JWT-based security with role enforcement to protect sensitive endpoints.
-- 🚀 **RESTful API Endpoints:** Efficient CRUD operations for courses and users, supporting flexible content management.
-- 🧪 **Built-in Testing & Docker Support:** Ensures code quality and easy deployment across environments.
-- 📝 **Data Validation Middleware:** Maintains data integrity with comprehensive validation rules.
-- 🔧 **Config Management:** Environment-specific settings and reliable database connection setup.
+- Project uses TypeScript with ES module output (`tsconfig.json` -> `outDir: ./dist`).
+- `src/server.ts` now prevents automatic startup when `NODE_ENV === "test"` so tests can import the app safely.
+- Configs exported from `src/configs` (env, db, redis). Tests mock these modules to avoid real network connections.
+- `src/configs/db.config.ts` added improved connection logging and graceful event handlers.
+- Redis connection helper in `src/configs/redis.config.ts` is optional and currently commented out in `server.ts`.
+- Tests under `src/__tests__` use Jest + Supertest and mock models/routes to run fast and deterministically.
 
 ---
 
-# COURSET-API
+## Tech stack
 
-A lightweight backend API for course and user management built with TypeScript, Express, and MongoDB.
-
----
-
-## Summary
-
-- Language: TypeScript
-- Framework: Express
-- Database: MongoDB (Mongoose)
-- Auth: JWT-based authentication and role-based access control
-
-This repository provides a simple structure for user and course management including validation, middleware, and authentication.
-
----
-
-## Repository Layout
-
-- `src/server.ts` — application entry
-- `src/configs/` — env, db, redis configuration helpers
-- `src/routes/` — Express routes (`user.route.ts`, `course.route.ts`)
-- `src/controllers/` — route handlers
-- `src/models/` — Mongoose schemas/models
-- `src/middlewares/` — authentication, role-based access, validation
+- Node.js + Express 5
+- TypeScript
+- MongoDB (Mongoose)
+- JWT authentication
+- Redis (optional)
+- Jest + Supertest for tests
 
 ---
 
 ## Quick Start
 
-Prerequisites:
+Prerequisites
 
-- Node.js v18+ and npm
-- MongoDB (local or Atlas)
+- Node.js 18+ and npm
+- MongoDB (Atlas or local)
 
-Install dependencies:
+Install dependencies
 
 ```bash
 npm install
 ```
 
-Create a `.env` file (copy from provided example if any) and set at least:
+Create and configure your environment file
 
-- `PORT` — server port (defaults to 4000 in code)
-- `MONGODB_URI` — MongoDB connection string
-- `JWT_SECRET` — JWT signing secret
-- `NODE_ENV` — environment (development/production)
+```bash
+cp .env .env.local
+# Edit .env.local: set MONGODB_URI, JWT_SECRET, PORT (optional)
+```
 
-Run in development:
+Run in development
 
 ```bash
 npm run dev
 ```
 
-Build and run (production):
+Build and run (production)
 
 ```bash
 npm run build
 npm start
 ```
 
-Docker (simple):
+---
+
+## Running tests
+
+Unit and integration tests use Jest + Supertest. Tests mock config modules (`src/configs/*`) and some routes/models to avoid external dependencies.
+
+```bash
+npm test
+```
+
+If you see issues importing TypeScript files in Jest, `jest.config.cjs` and `ts-jest` are already configured for `**/__tests__/**/*.test.ts`.
+
+---
+
+## Project structure (high level)
+
+- `src/server.ts` — Express app and startup logic. Exports the app so tests can import it without starting the HTTP server.
+- `src/routes/` — route definitions (`user.route.ts`, `course.route.ts`).
+- `src/controllers/` — request handlers and core logic.
+- `src/models/` — Mongoose models.
+- `src/configs/` — `env.config.ts`, `db.config.ts`, `redis.config.ts`.
+- `src/middlewares/` — authentication and validation middlewares.
+- `src/__tests__/` — Jest + Supertest test suites.
+
+---
+
+## API overview
+
+Base path: `/api/v1`
+
+Common endpoints (check `src/routes` for exact paths):
+
+- `POST /api/v1/signup` — register user
+- `POST /api/v1/login` — login and get JWT
+- `GET /api/v1/users` — list users (protected)
+- `GET /api/v1/courses` — list courses
+- `POST /api/v1/create-course` — create a course (protected)
+
+Example curl (signup):
+
+```bash
+curl -X POST http://localhost:3000/api/v1/signup \
+  -H "Content-Type: application/json" \
+  -d '{"username":"alice","email":"alice@example.com","password":"password"}'
+```
+
+---
+
+## Docker
 
 The included `dockerfile` expects a built `dist/` folder. Build locally first, then build the image:
 
@@ -130,57 +119,17 @@ docker run -p 3000:3000 --env-file .env courset-api
 
 ---
 
-## API Overview
+## Notes for contributors
 
-Base path: `/api/v1`
-
-Common endpoints (reference `src/routes/` for full details):
-
-- `POST /api/v1/users` — register user
-- `POST /api/v1/users/login` — login and receive JWT
-- `GET /api/v1/courses` — list courses
-- `POST /api/v1/courses` — create course (protected)
-
-Example curl (register):
-
-```bash
-curl -X POST http://localhost:3000/api/v1/users \
-  -H "Content-Type: application/json" \
-  -d '{"email":"user@example.com","password":"password"}'
-```
+- Tests mock config and DB modules — when adding new integration tests, follow the existing mocking pattern in `src/__tests__`.
+- Keep `server.ts` exportable without side effects so tests can import the Express app directly.
 
 ---
 
-## Important files
+If you'd like, I can also:
 
-- `src/configs/env.config.ts` — centralizes env variables
-- `src/configs/db.config.ts` — mongoose connection helper
-- `src/server.ts` — app bootstrap and route wiring
+- run the test suite locally and report results
+- add a short example Postman collection for the main routes
+- add a `LICENSE` file and contribution guidelines
 
----
-
-## Scripts
-
-- `npm run dev` — run in watch mode (`tsx`)
-- `npm run build` — compile TypeScript
-- `npm start` — run compiled output
-- `npm test` — run tests with Jest
-
----
-
-## Testing
-
-Tests use Jest. Test convention: `**/__tests__/**/*.test.ts`.
-
-```bash
-npm test
-```
-
----
-
-## Contributing
-
-1. Fork the repo
-2. Create a feature branch
-3. Add tests and update types where applicable
-4. Open a PR with a clear description
+_(README generated/updated to reflect recent code changes.)_

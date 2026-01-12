@@ -19,7 +19,7 @@ app.use("/api/v1", courseRoute);
 const startServer = async () => {
   try {
     await dbConnection();
-    await redisServer();
+    // await redisServer();
 
     app.listen(config.PORT, () => {
       console.log(`✅ server run in port ${config.PORT}`);
