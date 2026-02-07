@@ -7,7 +7,7 @@ const dbConnection = async (): Promise<void> => {
 
     // Proper connection verification
     console.log(
-      `✅ MongoDB connected: ${conn.connection.host}:${conn.connection.port}/${conn.connection.name}`
+      `✅ MongoDB connected: ${conn.connection.host}:${conn.connection.port}/${conn.connection.name}`,
     );
 
     // Graceful handling of connection events

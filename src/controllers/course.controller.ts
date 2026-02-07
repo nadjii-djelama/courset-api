@@ -11,17 +11,14 @@ export interface AuthenticatedRequest extends Request {
 // Create a course controller ----------------------------------------------------->
 const createCourse = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    // Create new course from validated request body
     const authorId = req.user?.id;
     const course = await course_model.create({ ...req.body, author: authorId });
 
-    // Return created course with 201 status
     return res.status(201).json({
       message: "Course created successfully",
       course,
     });
   } catch (err: any) {
-    // Handle validation errors and server issues
     return res.status(500).json({
       message: "Internal server error",
       error: err.message,
@@ -34,19 +31,16 @@ const editCourse = async (req: Request, res: Response) => {
   try {
     const courseId = req.params.id;
 
-    // Update course with validated request body
     const updatedCourse = await course_model.findByIdAndUpdate(
       courseId,
       req.body,
-      { new: true } // Return updated document
+      { new: true },
     );
 
-    // Return 404 if course doesn't exist
     if (!updatedCourse) {
       return res.status(404).json({ message: "Course not found" });
     }
 
-    // Return updated course
     return res.status(200).json({
       message: "Course updated successfully",
       course: updatedCourse,
@@ -61,10 +55,8 @@ const editCourse = async (req: Request, res: Response) => {
 // Get all courses controller ----------------------------------------------------->
 const getCourses = async (req: Request, res: Response) => {
   try {
-    // Fetch all courses from database
     const courses = await course_model.find();
 
-    // Handle empty collection gracefully
     if (courses.length <= 0) {
       return res.status(200).json({ message: "No courses found" });
     }
@@ -88,15 +80,12 @@ const getSpecificCourse = async (req: Request, res: Response) => {
   try {
     const courseId = req.params.id;
 
-    // Fetch single course by ID
     const course = await course_model.findById(courseId);
 
-    // Return 404 if course not found
     if (!course) {
       return res.status(404).json({ message: "Course not found" });
     }
 
-    // Return specific course
     return res.status(200).json({
       message: "Course fetched successfully",
       course,
@@ -114,15 +103,12 @@ const deleteSpecificCourse = async (req: Request, res: Response) => {
   try {
     const courseId = req.params.id;
 
-    // Delete course and return deleted document
     const deletedCourse = await course_model.findByIdAndDelete(courseId);
 
-    // Return 404 if course not found
     if (!deletedCourse) {
       return res.status(404).json({ message: "Course not found" });
     }
 
-    // Return success confirmation
     return res.status(200).json({ message: "Course deleted successfully" });
   } catch (err: any) {
     return res.status(500).json({
@@ -135,10 +121,8 @@ const deleteSpecificCourse = async (req: Request, res: Response) => {
 // Delete all courses controller ----------------------------------------------------->
 const deleteAllCourses = async (req: Request, res: Response) => {
   try {
-    // Delete all courses from collection
     const result = await course_model.deleteMany({});
 
-    // Return delete confirmation with count
     return res.status(200).json({
       message: "All courses deleted successfully",
       deletedCount: result.deletedCount,
@@ -201,22 +185,18 @@ const filterCourses = async (req: Request, res: Response) => {
       }
     }
 
-    // Add other filters
     if (category) addFilter("category", category as string);
     if (level) addFilter("level", level as string);
     if (author) addFilter("author", author as string);
 
-    // Get total count of filtered results
     const total = await course_model.countDocuments(query);
 
-    // Fetch paginated, sorted, filtered courses
     const courses = await course_model
       .find(query)
       .sort(sort as string)
       .skip(skip)
       .limit(Number(limit));
 
-    // Return filtered results with pagination info
     return res.status(200).json({
       message: "Courses filtered successfully",
       courses,

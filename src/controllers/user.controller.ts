@@ -17,8 +17,6 @@ const signup = async (req: Request, res: Response) => {
   try {
     const { username, fullname, email, password, retypePassword, role } =
       req.body;
-
-    // Check if all required fields are provided
     if (
       !username ||
       !fullname ||
@@ -30,7 +28,6 @@ const signup = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // check if the username and fullname are have the right length characters
     if (
       username.length > 20 ||
       username.length < 3 ||
@@ -46,7 +43,7 @@ const signup = async (req: Request, res: Response) => {
       email: email.toLowerCase().trim(),
       role: role.toLowerCase().trim(),
     };
-    // Sent all the queryis to the DB just one time
+
     const [count, emailUser, usernameUser] = await Promise.all([
       normalised.role === "admin"
         ? user_model.countDocuments({ role: "admin" })
@@ -57,30 +54,24 @@ const signup = async (req: Request, res: Response) => {
       }),
     ]);
 
-    // check role validity
     if (normalised.role === "admin" && count >= 1) {
       return res.status(403).json({ message: "Admin role already exists" });
     }
 
-    // Check if user already exists by email
     if (emailUser) {
       return res.status(409).json({ message: "Email already exists" });
     }
 
-    // Check username second
     if (usernameUser) {
       return res.status(409).json({ message: "Username already exists" });
     }
 
-    // Check if passwords match
     if (password !== retypePassword) {
       return res.status(400).json({ message: "Passwords do not match" });
     }
 
-    // Hash the password
     const hashPassword = await bcrypt.hash(password, 10);
 
-    // Create the new user
     const newUser = new user_model({
       username: normalised.username,
       fullname,
@@ -91,7 +82,6 @@ const signup = async (req: Request, res: Response) => {
 
     await newUser.save();
 
-    // Success response
     const { password: _, __v: __, ...safeUser } = newUser.toObject();
     res.status(201).json({
       message: "User created successfully",
@@ -109,26 +99,22 @@ const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    // Check if email and password are provided
     if (!email || !password) {
       return res
         .status(400)
         .json({ message: "Email and password are required" });
     }
     const normalisedEmail = email.toLowerCase().trim();
-    // Check if user exists by email
     const findUser = await user_model.findOne({ email: normalisedEmail });
     if (!findUser) {
       return res.status(404).json({ message: "User does not exist" });
     }
 
-    // Validate the password
     const validatePassword = await bcrypt.compare(password, findUser.password);
     if (!validatePassword) {
       return res.status(401).json({ message: "Wrong password, try again" });
     }
 
-    // Generate JWT token
     const tokenSecret = config.JWT_SECRET;
     if (!tokenSecret) {
       return res.status(500).json({ message: "Token secret is not defined" });
@@ -136,14 +122,13 @@ const login = async (req: Request, res: Response) => {
     const token = jwt.sign(
       { id: findUser.id, role: findUser.role },
       tokenSecret,
-      { expiresIn: "1d" }
+      { expiresIn: "1d" },
     );
 
-    // Success response
     const { password: _, __v: __, ...safeUser } = findUser.toObject();
     return res.status(200).json({
       message: "Login successful",
-      user: safeUser, // ✅ Clean TypeScript
+      user: safeUser,
       token,
     });
   } catch (err: any) {
@@ -170,10 +155,9 @@ const editUser = async (req: AuthenticatedRequest, res: Response) => {
       username: username ? username.toLowerCase().trim() : undefined,
       email: email ? email.toLowerCase().trim() : undefined,
     };
-    // Build the update object
+
     const newUser: any = {};
 
-    // Check if username is already in use by another user
     if (username) {
       const usernameExists = await user_model.findOne({
         username: normalised.username,
@@ -186,7 +170,6 @@ const editUser = async (req: AuthenticatedRequest, res: Response) => {
 
     if (fullname) newUser.fullname = fullname;
 
-    // Check if email is already in use by another user
     if (email) {
       const emailExists = await user_model.findOne({
         email: normalised.email,
@@ -197,7 +180,6 @@ const editUser = async (req: AuthenticatedRequest, res: Response) => {
       newUser.email = normalised.email;
     }
 
-    // Hash the new password if provided
     if (password) {
       if (password !== retypePassword) {
         return res.status(400).json({ message: "Passwords do not match" });
@@ -205,12 +187,10 @@ const editUser = async (req: AuthenticatedRequest, res: Response) => {
       newUser.password = await bcrypt.hash(password, 10);
     }
 
-    // Check if at least one field is provided
     if (Object.keys(newUser).length === 0) {
       return res.status(400).json({ message: "No fields to update" });
     }
 
-    // Update the user
     const updatedUser = await user_model.findByIdAndUpdate(userId, newUser, {
       new: true,
     });
@@ -219,7 +199,6 @@ const editUser = async (req: AuthenticatedRequest, res: Response) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Success response
     return res
       .status(200)
       .json({ message: "User updated successfully", user: updatedUser });
@@ -235,16 +214,13 @@ const deleteUser = async (req: Request, res: Response) => {
   try {
     const userId = req.params.id;
 
-    // Check if userId is provided and is a valid ObjectId
     if (!userId || !mongoose.isValidObjectId(userId))
       return res.status(400).json({ message: "Provide a valid user ID" });
 
-    // Delete the user
     const deletedUser = await user_model.findByIdAndDelete(userId);
     if (!deletedUser)
       return res.status(404).json({ message: "User not found" });
 
-    // Success response
     return res.status(200).json({ message: "User deleted successfully" });
   } catch (err: any) {
     res
@@ -271,13 +247,12 @@ const deleteAllUsers = async (req: Request, res: Response) => {
 // logout controller ----------------------------------------------------->
 const logout = async (req: Request, res: Response) => {
   try {
-    // Clear the JWT token cookie (client-side invalidation)
     res.clearCookie("token", {
       httpOnly: true,
       secure: config.NODE_ENV === "production",
       sameSite: "strict",
     });
-    // Success response
+
     return res.status(200).json({ message: "Logged out successfully" });
   } catch (err: any) {
     res
